@@ -96,6 +96,26 @@ bool LoadINIFromFS(LPCTSTR path)
 	return ParseINIFile(path);
 }
 
+bool TempMountSMB(LPCTSTR unc)
+{
+	TCHAR filterUnc[MAX_PATH];
+	strcpy_s(filterUnc, sizeof(filterUnc), unc);
+	PathRemoveFileSpec(filterUnc);
+	NETRESOURCE net = { 0 };
+	net.dwType = RESOURCETYPE_DISK;
+	net.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+	net.lpLocalName = NULL;
+	net.lpRemoteName = filterUnc;
+
+	DWORD result = WNetAddConnection3(NULL, &net,
+		NULL, NULL, CONNECT_INTERACTIVE);
+
+	if (result == S_OK)
+		return true;
+
+	return false;
+}
+
 bool MountSMBDirectory(LPCTSTR initag)
 {
 	/* run some sanity checks and mount our smb drive at Z:/ */

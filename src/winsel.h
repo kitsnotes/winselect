@@ -69,6 +69,7 @@ bool               RebootWindows();
 bool               ExecCmd();
 bool               ExecSetup();
 bool               LoadINIFromFS(LPCTSTR path);
+bool               TempMountSMB(LPCTSTR unc);
 bool               MountSMBDirectory(LPCTSTR inisect);
 bool               ParseINIFile(LPCTSTR path);
 

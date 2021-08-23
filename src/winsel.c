@@ -63,9 +63,8 @@ bool InstallListItem(LPCTSTR item, LPCTSTR initag)
 	if (idx == LB_ERR)
 		return false;
 
-	char* init;
 	size_t size = strlen(initag) + 1;
-	init = (char*)malloc(sizeof(char) * size);
+	char* init = (char*)malloc(sizeof(char) * size);
 
 	strcpy_s(init, sizeof(char) * size, initag);
 	if (SendMessage(lb, LB_SETITEMDATA, idx, (WPARAM)init) == LB_ERR)
@@ -205,7 +204,20 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	if (strncmp(lpCmdLine, "\\\\", 2) == 0)
 	{
 		/* we have a UNC path */
-		
+		/* in WinPE we need to manually mount this since the * 
+		 * winpe system can not deal with a UNC in file apis natively */
+		if (!TempMountSMB(lpCmdLine))
+		{
+			TCHAR helptmp[350];
+			sprintf_s(helptmp, sizeof(helptmp), szHelpSmb, lpCmdLine, "Bad SMB Mount");
+			TCHAR helpstr[MAX_HELPTEXT];
+			sprintf_s(helpstr, sizeof(helpstr), "%s\n\n%s", helptmp, szHelpInfo);
+			MessageBox(0, helpstr,
+				szMsgTitle,
+				MB_OK | MB_ICONINFORMATION);
+			return 0;
+		}
+
 		if (GetFileAttributes(lpCmdLine) == INVALID_FILE_ATTRIBUTES)
 		{
 			TCHAR helptmp[350];
