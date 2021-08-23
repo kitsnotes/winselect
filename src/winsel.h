@@ -68,6 +68,7 @@ INT_PTR CALLBACK   DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 bool               RebootWindows();
 bool               ExecCmd();
 bool               ExecSetup();
+bool               WinPEInit();
 bool               LoadINIFromFS(LPCTSTR path);
 bool               TempMountSMB(LPCTSTR unc);
 bool               MountSMBDirectory(LPCTSTR inisect);

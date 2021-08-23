@@ -199,6 +199,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	LoadString(g_hInstance, IDS_LOCALPATH, szHelpFile,
 		sizeof(szHelpFile) / sizeof(szHelpFile[0]));
 
+	/* Initialize the WinPE Environment */
+	if (!WinPEInit())
+		return 0;
+
 	/* cheap herustics of lpCmdLine */
 
 	if (strncmp(lpCmdLine, "\\\\", 2) == 0)

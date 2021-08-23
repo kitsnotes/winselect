@@ -218,6 +218,36 @@ bool ExecSetup()
 	return true;
 }
 
+bool WinPEInit()
+{
+	/* launch a the setup executable */
+	char path[MAX_PATH];
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	si.cb = sizeof(si);
+	GetSystemDirectory(path, sizeof(path));
+	strcat_s(path, sizeof(path), TEXT("\\wpeinit.exe"));
+	if (!CreateProcess(path,
+		NULL,
+		NULL,
+		NULL,
+		false,
+		CREATE_DEFAULT_ERROR_MODE,
+		NULL,
+		NULL,
+		&si,
+		&pi))
+	{
+		MessageBox(g_selDlg, TEXT("Unable to launch wpeinit.exe."),
+			TEXT("CreateProcess failed."), MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	return true;
+}
 
 bool ExecCmd()
 {
