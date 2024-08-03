@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,12 +70,12 @@ BEGIN
             VALUE "Comments", "github.com/kitsnotes/winselect"
             VALUE "CompanyName", "The Cat"
             VALUE "FileDescription", "Windows Installer Selection Utility"
-            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "FileVersion", "1.1.0.0"
             VALUE "InternalName", "WinSelect"
             VALUE "LegalCopyright", "Copyright © 2021 The Cat"
             VALUE "OriginalFilename", "winselect.exe"
             VALUE "ProductName", "  Windows Setup Selection"
-            VALUE "ProductVersion", "1, 0, 0, 1"
+            VALUE "ProductVersion", "1.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -96,8 +96,8 @@ CAPTION "About Setup Selection Utility"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_MAIN,IDC_STATIC,11,17,20,20
-    LTEXT           "Setup Selection Utility Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2021 The Cat",IDC_STATIC,40,25,119,8
+    LTEXT           "Setup Selection Utility Version 1.1",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2021-2023 Cat Software",IDC_STATIC,40,25,134,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 
@@ -112,6 +112,15 @@ BEGIN
     LTEXT           "Select a Windows Version to install...",IDC_INFO,7,7,353,8
     LISTBOX         IDC_LIST,7,22,353,146,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Command &Prompt...",ID_CMDP,227,177,81,14
+END
+
+IDD_STATUS DIALOGEX 0, 0, 235, 55
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Starting Windows..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_SETUP,-1,11,17,20,20
+    LTEXT           "Initializing network...",-1,44,22,180,8,SS_NOPREFIX
 END
 
 
@@ -133,6 +142,10 @@ BEGIN
         RIGHTMARGIN, 360
         TOPMARGIN, 7
         BOTTOMMARGIN, 191
+    END
+
+    IDD_STATUS, DIALOG
+    BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -158,6 +171,11 @@ BEGIN
     0
 END
 
+IDD_STATUS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -167,6 +185,8 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_MAIN                ICON                    "winsel.ico"
+
+IDI_SETUP               ICON                    "setup.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

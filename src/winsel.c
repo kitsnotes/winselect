@@ -32,8 +32,12 @@
   "language='*'\"")
 
 HWND		g_selDlg = NULL;
+HWND		g_statusDlg = NULL;
 HINSTANCE   g_hInstance = NULL;
-
+int			g_nCmdShow = 0;
+LPTSTR		g_lpCmdLine = NULL;
+bool		g_hasInit = false;
+LPTSTR		g_iniFile = NULL;
 bool RequestClose()
 {
 #ifdef _DEBUG
@@ -104,7 +108,6 @@ bool StartInstaller()
 	if (result == LB_ERR)
 		return false;
 
-
 	if (MountSMBDirectory((char*)result))
 	{
 		if(ExecSetup())
@@ -136,7 +139,10 @@ INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return StartInstaller();
 		case ID_REBOOT:	
 			if (PromptForReboot())
+			{
+				PostQuitMessage(0);
 				return RebootWindows();
+			}
 			else
 				return false;
 		case ID_CMDP: 
@@ -163,26 +169,13 @@ INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return false;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+void LoadConfig()
 {
-	MSG    msg;
-	bool   mr;
-	HMENU  sysMenu;
-	HICON  sysIcon;
-	TCHAR  szAppTitle[128];
-	TCHAR  szAbout[128];
-	TCHAR  szReboot[128];
 	TCHAR  szMsgTitle[128];
 	TCHAR  szInvFile[128];
 	TCHAR  szHelpInfo[MAX_HELPTEXT];
 	TCHAR  szHelpFile[128];
 	TCHAR  szHelpSmb[128];
-
-	g_hInstance = hInstance;
-
 	/* prepare msgbox help text strings */
 	LoadString(g_hInstance, IDS_UTILITY_USAGE, szMsgTitle,
 		sizeof(szMsgTitle) / sizeof(szMsgTitle[0]));
@@ -195,75 +188,80 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	LoadString(g_hInstance, IDS_UNCPATH, szHelpSmb,
 		sizeof(szHelpSmb) / sizeof(szHelpSmb[0]));
-	
+
 	LoadString(g_hInstance, IDS_LOCALPATH, szHelpFile,
 		sizeof(szHelpFile) / sizeof(szHelpFile[0]));
 
-	/* Initialize the WinPE Environment */
-	if (!WinPEInit())
-		return 0;
-
 	/* cheap herustics of lpCmdLine */
-
-	if (strncmp(lpCmdLine, "\\\\", 2) == 0)
+	if (strncmp(g_lpCmdLine, "\\\\", 2) == 0)
 	{
 		/* we have a UNC path */
-		/* in WinPE we need to manually mount this since the * 
+		/* in WinPE we need to manually mount this since the *
 		 * winpe system can not deal with a UNC in file apis natively */
-		if (!TempMountSMB(lpCmdLine))
+		if (!TempMountSMB(g_lpCmdLine))
 		{
 			TCHAR helptmp[350];
-			sprintf_s(helptmp, sizeof(helptmp), szHelpSmb, lpCmdLine, "Bad SMB Mount");
+			sprintf_s(helptmp, sizeof(helptmp), szHelpSmb, g_lpCmdLine, "Bad SMB Mount");
 			TCHAR helpstr[MAX_HELPTEXT];
 			sprintf_s(helpstr, sizeof(helpstr), "%s\n\n%s", helptmp, szHelpInfo);
 			MessageBox(0, helpstr,
 				szMsgTitle,
 				MB_OK | MB_ICONINFORMATION);
-			return 0;
+			PostQuitMessage(0);
 		}
 
-		if (GetFileAttributes(lpCmdLine) == INVALID_FILE_ATTRIBUTES)
+		if (GetFileAttributes(TEXT(g_iniFile)) == INVALID_FILE_ATTRIBUTES)
 		{
 			TCHAR helptmp[350];
-			sprintf_s(helptmp, sizeof(helptmp), szHelpSmb, lpCmdLine, szInvFile);
+			sprintf_s(helptmp, sizeof(helptmp), szHelpSmb, TEXT(g_iniFile), szInvFile);
 			TCHAR helpstr[MAX_HELPTEXT];
 			sprintf_s(helpstr, sizeof(helpstr), "%s\n\n%s", helptmp, szHelpInfo);
 			MessageBox(0, helpstr,
 				szMsgTitle,
 				MB_OK | MB_ICONINFORMATION);
-			return 0;
+			PostQuitMessage(-1);
 		}
 	}
 	else
 	{
 		/* we have a local file */
-		if (GetFileAttributes(lpCmdLine) == INVALID_FILE_ATTRIBUTES)
+		if (GetFileAttributes(TEXT(g_iniFile)) == INVALID_FILE_ATTRIBUTES)
 		{
 			TCHAR helptmp[350];
-			sprintf_s(helptmp, sizeof(helptmp), szHelpFile, lpCmdLine, szInvFile);
+			sprintf_s(helptmp, sizeof(helptmp), szHelpFile, TEXT(g_iniFile), szInvFile);
 			TCHAR helpstr[MAX_HELPTEXT];
 			sprintf_s(helpstr, sizeof(helpstr), "%s\n\n%s", helptmp, szHelpInfo);
 			MessageBox(0, helpstr,
 				szMsgTitle,
 				MB_OK | MB_ICONINFORMATION);
-			return 0;
+			PostQuitMessage(-1);
 		}
 	}
 
-	InitCommonControls();
+	/* Initialize the INI file for the [Config] section */
+	LoadINIConfigOptions();
+}
+
+void CreateSelectionDialog()
+{
+	HMENU  sysMenu;
+	HICON  sysIcon;
+	TCHAR  szAppTitle[128];
+	TCHAR  szAbout[128];
+	TCHAR  szReboot[128];
 
 	g_selDlg = CreateDialog(g_hInstance,
-							MAKEINTRESOURCE(IDD_SELECT),
-							NULL,
-							DialogProc);
+		MAKEINTRESOURCE(IDD_SELECT),
+		NULL,
+		DialogProc);
 
 	if (!g_selDlg)
 	{
-		MessageBox(0, TEXT("CreateDialog failed. You should never see this. Unable to launch."), 
-					  TEXT("Win32 Error."), 
-					  MB_OK | MB_ICONERROR);
+		MessageBox(0, TEXT("CreateDialog failed. You should never see this. Unable to launch."),
+			TEXT("Win32 Error."),
+			MB_OK | MB_ICONERROR);
 
-		return -1;
+		PostQuitMessage(-1);
 	}
 
 	LoadString(g_hInstance, IDS_TITLE, szAppTitle, sizeof(szAppTitle) / sizeof(szAppTitle[0]));
@@ -272,30 +270,108 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	SetWindowText(g_selDlg, szAppTitle);
 
-	sysIcon = (HICON)LoadImage(GetModuleHandle(NULL), 
-									MAKEINTRESOURCE(IDI_MAIN),
-									IMAGE_ICON, 0, 0, 
-									LR_DEFAULTCOLOR | LR_DEFAULTSIZE);
+	sysIcon = (HICON)LoadImage(GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDI_MAIN),
+		IMAGE_ICON, 0, 0,
+		LR_DEFAULTCOLOR | LR_DEFAULTSIZE);
 	SendMessage(g_selDlg, WM_SETICON, ICON_BIG, (LPARAM)sysIcon);
 
 	sysMenu = GetSystemMenu(g_selDlg, false);
-	if(sysMenu)
+	if (sysMenu)
 	{
 		/* Change our "Close" option to "Reboot" */
 		MENUITEMINFO mi = { sizeof(MENUITEMINFO) };
 		GetMenuItemInfo(sysMenu, SC_CLOSE, false, &mi);
 		mi.dwTypeData = szReboot;
 		mi.cch = sizeof(szReboot) / sizeof(szReboot[0]);
-		ModifyMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND|MF_STRING, SC_CLOSE, mi.dwTypeData);
+		ModifyMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND | MF_STRING, SC_CLOSE, mi.dwTypeData);
 		/* Append a separator and our About Utility menu*/
-		AppendMenu(sysMenu, MF_BYPOSITION|MF_SEPARATOR, 0, "");
-		AppendMenu(sysMenu, MF_BYPOSITION|MF_STRING, ID_ABOUT, szAbout);
+		AppendMenu(sysMenu, MF_BYPOSITION | MF_SEPARATOR, 0, "");
+		AppendMenu(sysMenu, MF_BYPOSITION | MF_STRING, ID_ABOUT, szAbout);
 	}
-	
-	/* Show the dialog and parse the INI file*/
-	ShowWindow(g_selDlg, nCmdShow);
-	LoadINIFromFS(lpCmdLine);
+}
 
+int SecondMain()
+{
+	/* Initialize the WinPE Environment */
+	if (!WinPEInit())
+	{
+		PostQuitMessage(0);
+		return -1;
+	}
+	Sleep(1500);
+	char inifile[MAX_PATH];
+	sprintf_s(inifile, sizeof(inifile), "%s\\winselect.ini", g_lpCmdLine);
+	g_iniFile = inifile;
+	LoadConfig();
+	CreateSelectionDialog();
+
+	// See if we have a by-MAC unattended INI configuration
+	bool has_ini = CheckForMACUnattend();
+
+	/* Show the dialog and parse the INI file*/
+	ParseINIFile();
+	if (has_ini)
+	{
+		if (!ProcessMACBasedUnattendedInstall(g_lpCmdLine))
+		{
+			ShowWindow(g_statusDlg, 0);
+			ShowWindow(g_selDlg, g_nCmdShow);
+		}
+	}
+	else
+	{
+		ShowWindow(g_statusDlg, 0);
+		ShowWindow(g_selDlg, g_nCmdShow);
+	}
+
+	g_hasInit = true;
+	return 1;
+}
+
+INT_PTR CALLBACK StatusDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_DO_INIT:
+		if (!g_hasInit)
+			SecondMain();
+	}
+
+	return false;
+}
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	MSG    msg;
+	bool   mr;
+
+
+	g_hInstance = hInstance;
+	g_lpCmdLine = lpCmdLine;
+	g_nCmdShow = nCmdShow;
+	InitCommonControls();
+
+	g_statusDlg = CreateDialog(g_hInstance,
+		MAKEINTRESOURCE(IDD_STATUS),
+		NULL,
+		StatusDlgProc);
+
+	if (!g_statusDlg)
+	{
+		MessageBox(0, TEXT("CreateDialog failed. You should never see this. Unable to launch."),
+			TEXT("Win32 Error."),
+			MB_OK | MB_ICONERROR);
+
+		return -1;
+	}
+	ShowWindow(g_statusDlg, nCmdShow);
+	UpdateWindow(g_statusDlg);
+	SendMessage(g_statusDlg, WM_DO_INIT, 0, 0);
+	
 	/* The win32 dialog message loop */
 	while((mr = GetMessage(&msg, 0, 0, 0)) != 0)
 	{

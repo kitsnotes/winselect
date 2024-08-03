@@ -34,6 +34,7 @@
 
 #include <Windows.h>
 #include <winnetwk.h>
+#include <iphlpapi.h>
 #include <CommCtrl.h>
 #include <shlwapi.h>
 #include <tchar.h>
@@ -44,15 +45,22 @@
 #include "resource.h"
 
 #define	MAX_HELPTEXT		4096
-#define MAX_ININAMES        1024
+#define MAX_ININAMES        128
 #define MAX_URL	            255
 #define LOCALNAME_DISK		"Z:"
 
+#define WM_DO_INIT		(WM_USER + 0x0001)
+
 extern HWND        g_selDlg;
 extern HINSTANCE   g_hInstance;
-extern LPCTSTR     g_iniFile;
+extern LPTSTR      g_iniFile;
 extern bool        g_smbMounted;
-
+extern LPTSTR      g_unattendFolder;
+extern LPTSTR      g_unattendXml;
+extern LPTSTR      g_unattendIni;
+extern LPTSTR      g_lpCmdLine;
+extern int         g_nCmdShow;
+extern bool		   g_hasInit;
 /* Functions: about.c */
 INT_PTR CALLBACK   AboutDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool               ShowAboutDialog();
@@ -69,9 +77,11 @@ bool               RebootWindows();
 bool               ExecCmd();
 bool               ExecSetup();
 bool               WinPEInit();
-bool               LoadINIFromFS(LPCTSTR path);
+bool               LoadINIConfigOptions();
+bool               LoadINIFromFS();
 bool               TempMountSMB(LPCTSTR unc);
 bool               MountSMBDirectory(LPCTSTR inisect);
-bool               ParseINIFile(LPCTSTR path);
-
+bool               ParseINIFile();
+bool               CheckForMACUnattend();
+bool               ProcessMACBasedUnattendedInstall();
 #endif /* WINSEL_H */

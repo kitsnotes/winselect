@@ -134,7 +134,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Output\Release32\winselect32.exe</OutputFile>
-      <AdditionalDependencies>shlwapi.lib;mpr.lib;comctl32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IPHLPAPI.lib;shlwapi.lib;mpr.lib;comctl32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <LinkErrorReporting>NoErrorReport</LinkErrorReporting>
     </Link>
@@ -183,7 +183,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Output\Release64\winselect64.exe</OutputFile>
-      <AdditionalDependencies>shlwapi.lib;mpr.lib;comctl32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IPHLPAPI.lib;shlwapi.lib;mpr.lib;comctl32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <LinkErrorReporting>NoErrorReport</LinkErrorReporting>
     </Link>
@@ -300,7 +300,9 @@
     <ClCompile Include="src\winsel.c" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\setup.ico" />
     <Image Include="res\winsel.ico" />
+    <Image Include="setup.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\winsel.rc" />

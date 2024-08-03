@@ -23,6 +23,9 @@
 #define IDS_INVFILE                     17
 #define IDD_SELECT                      101
 #define IDD_ABOUT                       103
+#define IDD_STATUS                      104
+#define IDI_ICON1                       111
+#define IDI_SETUP                       111
 #define IDC_LIST1                       1000
 #define IDC_LIST                        1000
 #define ID_REBOOT                       1003
@@ -34,7 +37,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        111
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40007
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           103
